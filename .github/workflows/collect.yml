@@ -1,0 +1,22 @@
+name: raccolta-giornaliera
+on:
+  schedule:
+    - cron: '0 6 * * 1-5'      # 06:00 UTC nei giorni feriali (vedi nota fuso)
+  workflow_dispatch:            # permette anche l'avvio manuale dal sito
+permissions:
+  contents: write
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install yfinance pandas numpy scipy
+      - run: python collect.py
+      - run: |
+          git config user.name "bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add pc_archive.csv
+          git commit -m "raccolta $(date -u +%Y-%m-%d)" || echo "niente da committare"
+          git push
